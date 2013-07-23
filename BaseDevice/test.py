@@ -32,9 +32,13 @@ class TestDeviceRequestHandler(BaseDeviceRequestHandler):
       self.wfile.write(response)
       
    def do_cmd_acquire(self):
+      self.send_response( 200 )
+      self.send_header("content-type", "text/plain")
+      self.end_headers()
       self.state["SQUID-IP"] = self.client_address[0];
       self.state["SQUID-PORT"] = self.query["port"];
-      pass
+      self.wfile.write("OK")
+      
 
 class TestDevice(BaseDevice):
    def update_time_forever(self):
