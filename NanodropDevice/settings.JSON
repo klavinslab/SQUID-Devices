@@ -1,5 +1,6 @@
 {
-    "port"     : 8000,
-    "datapath" : "./"
+    "port"         : 8000,
+    "datapath"     : "./",
+    "datafilename" : "Nucleic Acid {:%Y   %m   %d}  v3.6.ndj"
     
 }
