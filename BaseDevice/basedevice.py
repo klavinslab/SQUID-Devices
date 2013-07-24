@@ -46,7 +46,7 @@ class BaseDeviceRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def _do_always_last(self):
         #call the correct command handler
         try:
-            getattr(self, "do_cmd_"+self.query["cmd"])()
+            cmd = getattr(self, "do_cmd_"+self.query["cmd"])
         except KeyError:
             self.send_response(400) #bad request
             self.send_header("content-type", "text/plain")
@@ -57,6 +57,8 @@ class BaseDeviceRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("content-type", "text/plain")
             self.end_headers()
             self.wfile.write("command " + self.query["cmd"] + " not found")
+        else:
+            cmd()
     
     def do_POST(self):
         self._do_always_first()
