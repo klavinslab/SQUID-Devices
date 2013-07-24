@@ -3,6 +3,7 @@ from basedevice import BaseDeviceRequestHandler, BaseDevice
 import time
 import json
 import os
+import httplib, urllib
 from datetime import date
 
 class ndDeviceRequestHandler(BaseDeviceRequestHandler):
@@ -70,6 +71,16 @@ class ndDevice(BaseDevice):
         return False
     return True
   
+  def _post_squid_data(self,path,data):
+    d = {"datum[uuid]": self.state["uuid"], \
+         "datum[data]": data}
+    post_data = urllib.urlencode(d)
+    headers = {"Content-type": "application/x-www-form-urlencoded",
+               "Accept": "text/plain"}
+    conn = httplib.HTTPConnection(self.state["SQUID-IP"], \
+                                  self.state["SQUID-PORT"])
+    conn.request("POST",path,post_data,headers)
+  
   def monitor_data_file(self):
     while 1:
       data_path = self.settings["datapath"] + \
@@ -78,9 +89,7 @@ class ndDevice(BaseDevice):
         line = self.datafile.readline()
         if line:
           #TODO: placeholder for adding to DB
-          print line
-        else:
-          print "nothing new"
+          self._post_squid_data("/data",line)
       time.sleep(5)
            
 
