@@ -56,9 +56,7 @@ class DoorWatcher(threading.Thread):
     
     
     def stop(self):
-        self.running = False
-    
-            
+        self.running = False 
     
     
 

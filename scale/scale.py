@@ -1,14 +1,8 @@
 #!/usr/bin/env python
+import time, sys, math, traceback, thread, json, datetime, os
 import serial as pyserial
 from threading import Thread
-import thread
-import time
-import datetime
-import json
 import httplib, urllib
-import traceback
-import math
-import sys
 from basedevice import BaseDevice
 from basedevice import BaseDeviceRequestHandler
 from serial.serialutil import SerialException
@@ -91,8 +85,7 @@ class serialReader(Thread):
                     self.read()
                 else:
                     self.serial.open()
-            except Exception:
-                #If this exception is raised then the device is probably off.
+            except Exception:                              #If this exception is raised then the device is probably off.
                 self.serial.close()
                 if powered_on:
                     powered_on = False
@@ -128,8 +121,7 @@ class Scale(BaseDevice):
         try:
             BaseDevice.__init__(self,handler)
             state = self.state
-        except Exception:
-            #gonna need a stack trace to figure out what went wrong
+        except Exception:                                   #gonna need a stack trace to figure out what went wrong
             traceback.print_exc()
 
 def parse_and_post_data(line):
@@ -145,8 +137,7 @@ def parse_and_post_data(line):
     try:
         while 1:
             value.remove(' ')
-    except Exception:
-        #Add a trailing zero, this helps prevent an error on startup
+    except Exception:                                       #Add a trailing zero, this helps prevent an error on startup
         line += '0'
             
     if value.__contains__('L'):
@@ -191,15 +182,33 @@ def post(data):
                                       squid_port)
     conn.request("POST",'/data',post_data,headers)   
 
+def make_pid():
+    pid = os.getpid()
+    if os.path.exists("/var/run/scale.pid"):                                      
+        raise Exception                                     #This process is already running on the machine. Stop execution
+    outfile = open("/var/run/scale.pid" , 'w')
+    outfile.write(str(pid))
             
 if __name__ == '__main__':
     try:
+        make_pid()
         dev = Scale(ScaleRequestHandler)
         serial = serialReader('/dev/ttyUSB0',9600)
         serial.start()
         dev.start()
-        raw_input ('Press anything to stop this madness!\n')
+        
+        while os.path.exists("/var/run/scale.pid"):         #Check for PID file. When it goes missing, that signals the program to cease execution
+            time.sleep(10)                                  #Check again in 10 seconds
+        serial.is_running = False
         dev.stop()
-    except Exception:
-        traceback.print_ex
+    except Exception:                                       #Something went wrong, break down the program
+        outfile = open("crash_log_" + str(time.time), 'w')
+        outfile.write(traceback.print_ex)
+        if os.path.exists("var/run/refrigerator.pid"):
+            os.remove("/var/run/refrigerator.pid")          #cleanup the PID
+        try:
+            dev.stop()                                      #Stop running threads
+            serial.is_running = False
+        except Exception:
+            pass
 

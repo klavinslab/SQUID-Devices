@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+#	/etc/rc.d/init.d/scale
+#
+# labprinter	This shell script starts the printer daemon
+#
+# Source function library
+. /lib/lsb/init-functions
+
+dir="/home/bioturk/SQUID-Devices/scale"
+PIDFILE="/var/run/scale.pid"
+
+ start() {
+	echo -n "Starting scale: "
+	if [ -f $PIDFILE ]; then
+		PID = `cat $PIDFILE`
+		echo scale is already running: $PID
+		exit 2;
+	else
+		cd $dir
+		python scale.py
+		return $?
+	fi
+}
+
+ stop() {
+	echo -n "Shutting down scale"
+	echo
+	rm /var/run/scale.pid
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	force-reload)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: {start|stop|restart}"
+		exit 1
+		;;
+esac
+exit $?
+

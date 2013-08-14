@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+#	/etc/rc.d/init.d/labprinter
+#
+# labprinter	This shell script starts the printer daemon
+#
+# Source function library
+. /lib/lsb/init-functions
+
+printer_dir="/home/bioturk/SQUID-Devices/LabPrinter"
+PIDFILE="/var/run/labprinter.pid"
+
+ start() {
+	echo -n "Starting LabPrinter: "
+	if [ -f $PIDFILE ]; then
+		PID = `cat $PIDFILE`
+		echo LabPrinter is already running: $PID
+		exit 2;
+	else
+		cd $printer_dir
+		python printer.py
+		return $?
+	fi
+}
+
+ stop() {
+	echo -n "Shutting down LabPrinter"
+	echo
+	killproc printer.sh
+	rm /var/run/labprinter.pid
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	force-reload)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: {start|stop|restart}"
+		exit 1
+		;;
+esac
+exit $?
+
+
+

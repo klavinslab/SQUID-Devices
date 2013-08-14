@@ -4,6 +4,7 @@ import json
 import basedevice
 import time
 import thread
+import os
 
 """
 Programmer: Joseph Sullivan
@@ -109,26 +110,33 @@ class labprinter(basedevice.BaseDevice):
                 print 'Initialization failed: unable to establish CUPS connection.'
                 print Exception.__doc__
                 time.sleep(5)
-                pass
-        
-        
+            
     def work(self):
         while 1:
             #What should we do?
             #How about we check to see that there are still printers connected?
             time.sleep(5)
-        pass
-    
-    
-    
-    
-    
-#program entry point
-if __name__ == '__main__':
-   PORT = 8000
-   dev = labprinter(PrinterRequestHandler)
-   dev.start()
-   print "serving at port", PORT
-   raw_input ("type something to stop: ")
-   dev.stop()#!/usr/bin/env python
+        
+def make_pid():
+    pid = os.getpid()
+    outfile = open("/var/run/labprinter.pid" , 'w')
+    outfile.write(str(pid) + "\n")
 
+if __name__ == '__main__':
+    try:   
+        make_pid()
+        PORT = 8000
+        dev = labprinter(PrinterRequestHandler)
+        dev.start()
+        while os.path.exists("/var/run/labprinter.pid"):
+            time.sleep(10)                              #Keep executing, check again in 10 seconds
+        dev.stop()
+    except Exception:                                   #Something went wrong, break down the program
+        outfile = open("crash_log_" + str(time.time), 'w')
+        outfile.write(traceback.print_ex)
+        if os.path.exists("var/run/refrigerator.pid"):
+            os.remove("/var/run/refrigerator.pid")      #cleanup the PID
+        try:
+            dev.stop()                                  #Stop running threads
+        except Exception:
+            pass

@@ -61,19 +61,30 @@ class refrigerator(BaseDevice):
         self.state["time"] = time.time()
         time.sleep(1)      
         
+def make_pid():
+    pid = os.getpid()
+    if os.path.exists("/var/run/scale.pid"):        #This process is already running on the machine. Stop execution
+        raise Exception
+    outfile = open("/var/run/refrigerator.pid" , 'w')
+    outfile.write(str(pid))        
+        
 if __name__ == '__main__':
-    in_pin = int(raw_input("Enter input pin header (BCM): "))
-    dev = refrigerator(RefrigeratorRequestHandler,None,24)
-    raw_input("Enter anything to cease execution: ")
-    self.state["doorwatcher"].stop()
-    self.state["tempwatcher"].stop()
-    print "goodbye"
-        
-
-        
-        
+    try:
+        make_pid()
+        dev = refrigerator(RefrigeratorRequestHandler,None,25)
+        while os.path.exists("/var/run/refrigerator.pid"):
+            time.sleep(10)                          #Keep executing, check again in 10 seconds
+        self.state["doorwatcher"].stop()
+        self.state["tempwatcher"].stop()
+    except Exception:                               #Something has gone wrong, break down the program
+        outfile = open("crash_log_" + str(time.time), 'w')
+        outfile.write(traceback.print_ex)
+        if os.path.exists("var/run/refrigerator.pid"):
+            os.remove("/var/run/refrigerator.pid")  #cleanup the PID
+        try:
+            self.state["doorwatcher"].stop()        #Stop running threads
+            self.state["doorwatcher"].stop()
+        except Exception:
+            pass
+            
     
-    
-    
-
- 
