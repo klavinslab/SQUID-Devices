@@ -18,7 +18,7 @@ PIDFILE="/var/run/labprinter.pid"
 		exit 2;
 	else
 		cd $printer_dir
-		python printer.py
+		python printer.py &
 		return $?
 	fi
 }
@@ -26,7 +26,6 @@ PIDFILE="/var/run/labprinter.pid"
  stop() {
 	echo -n "Shutting down LabPrinter"
 	echo
-	killproc printer.sh
 	rm /var/run/labprinter.pid
 	RETVAL=$?
 	echo

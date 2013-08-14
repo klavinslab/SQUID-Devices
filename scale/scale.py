@@ -22,6 +22,7 @@ squid_port = ''
 class ScaleRequestHandler(BaseDeviceRequestHandler):
 
     def do_cmd_test(self):
+        print "do_cmd_test"
         self.send_response(200)
         self.send_header("content-type", "text/plain")
         self.end_headers()
@@ -35,6 +36,7 @@ class ScaleRequestHandler(BaseDeviceRequestHandler):
         self.wfile.write(response)
     
     def do_cmd_info(self):
+        print "do_cmd_info"
         self.send_response( 200 )
         self.send_header('content-type', "text/plain")
         self.end_headers()
@@ -46,6 +48,7 @@ class ScaleRequestHandler(BaseDeviceRequestHandler):
         self.wfile.write(response)
         
     def do_cmd_acquire(self):
+        print "do_cmd_acquire"
         global acquire
         global squid_ip
         global squid_port
@@ -81,7 +84,7 @@ class serialReader(Thread):
                         print "powered on"
                         if acquire:
                             post({"time"      : time.time(),
-                                  "event-type": "powered on"})
+                                  "event-type": "powered-on"})
                     self.read()
                 else:
                     self.serial.open()
@@ -92,7 +95,7 @@ class serialReader(Thread):
                     print "powered off"
                     if acquire:
                         post({"time"      : time.time(),
-                                  "event-type": "powered off"})
+                                  "event-type": "powered-off"})
             
     def read(self):
         try:
@@ -175,9 +178,7 @@ def post(data):
     print post_data
     
     headers = {"content-type"   : "plain/text",
-               "Content-Length" : str(len(json.dumps(d))),
                 "Accept"        : "text/plain"}
-    
     conn = httplib.HTTPConnection(squid_ip, \
                                       squid_port)
     conn.request("POST",'/data',post_data,headers)   
@@ -187,7 +188,7 @@ def make_pid():
     if os.path.exists("/var/run/scale.pid"):                                      
         raise Exception                                     #This process is already running on the machine. Stop execution
     outfile = open("/var/run/scale.pid" , 'w')
-    outfile.write(str(pid))
+    outfile.write(str(pid) + '\n')
             
 if __name__ == '__main__':
     try:
@@ -196,19 +197,20 @@ if __name__ == '__main__':
         serial = serialReader('/dev/ttyUSB0',9600)
         serial.start()
         dev.start()
-        
         while os.path.exists("/var/run/scale.pid"):         #Check for PID file. When it goes missing, that signals the program to cease execution
             time.sleep(10)                                  #Check again in 10 seconds
         serial.is_running = False
+        serial.join()
         dev.stop()
     except Exception:                                       #Something went wrong, break down the program
-        outfile = open("crash_log_" + str(time.time), 'w')
+        outfile = open("/home/bioturk/SQUID-Devices/scale/crash_log_" + str(time.time), 'w')
         outfile.write(traceback.print_exc())
-        if os.path.exists("var/run/refrigerator.pid"):
-            os.remove("/var/run/refrigerator.pid")          #cleanup the PID
+        if os.path.exists("var/run/scale.pid"):
+            os.remove("/var/run/scale.pid")          #cleanup the PID
         try:
-            dev.stop()                                      #Stop running threads
-            serial.is_running = False
+            serial.is_running = False                #Stop running threads
+            serial.join()
+            dev.stop()
         except Exception:
             pass
 

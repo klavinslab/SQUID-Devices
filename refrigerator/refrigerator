@@ -18,7 +18,7 @@ PIDFILE="/var/run/refrigerator.pid"
 		exit 2;
 	else
 		cd $dir
-		python refrigerator.py
+		python refrigerator.py &
 		return $?
 	fi
 }

@@ -133,10 +133,10 @@ if __name__ == '__main__':
             time.sleep(10)                              #Keep executing, check again in 10 seconds
         dev.stop()
     except Exception:                                   #Something went wrong, break down the program
-        outfile = open("crash_log_" + str(time.time), 'w')
+        outfile = open("/home/bioturk/SQUID-Devices/LabPrinter/crash_log_" + str(time.time), 'w')
         outfile.write(traceback.print_exc())
-        if os.path.exists("var/run/refrigerator.pid"):
-            os.remove("/var/run/refrigerator.pid")      #cleanup the PID
+        if os.path.exists("var/run/labprinter.pid"):
+            os.remove("/var/run/labprinter.pid")      #cleanup the PID
         try:
             dev.stop()                                  #Stop running threads
         except Exception:

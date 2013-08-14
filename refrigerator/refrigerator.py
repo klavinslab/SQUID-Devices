@@ -67,7 +67,7 @@ def make_pid():
     if os.path.exists("/var/run/scale.pid"):        #This process is already running on the machine. Stop execution
         raise Exception
     outfile = open("/var/run/refrigerator.pid" , 'w')
-    outfile.write(str(pid))        
+    outfile.write(str(pid) + '\n')        
         
 if __name__ == '__main__':
     try:
@@ -78,8 +78,8 @@ if __name__ == '__main__':
         self.state["doorwatcher"].stop()
         self.state["tempwatcher"].stop()
     except Exception:                               #Something has gone wrong, break down the program
-        outfile = open("crash_log_" + str(time.time), 'w')
-        outfile.write(traceback.print_ex())
+        outfile = open("/home/bioturk/SQUID-Devices/crash_log_" + str(time.time), 'w')
+        outfile.write(traceback.print_exc())
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")  #cleanup the PID
         try:

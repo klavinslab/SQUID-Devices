@@ -18,7 +18,7 @@ PIDFILE="/var/run/scale.pid"
 		exit 2;
 	else
 		cd $dir
-		python scale.py
+		python scale.py &
 		return $?
 	fi
 }
