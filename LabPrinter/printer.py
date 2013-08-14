@@ -5,6 +5,7 @@ import basedevice
 import time
 import thread
 import os
+import traceback
 
 """
 Programmer: Joseph Sullivan
@@ -133,7 +134,7 @@ if __name__ == '__main__':
         dev.stop()
     except Exception:                                   #Something went wrong, break down the program
         outfile = open("crash_log_" + str(time.time), 'w')
-        outfile.write(traceback.print_ex)
+        outfile.write(traceback.print_exc())
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")      #cleanup the PID
         try:

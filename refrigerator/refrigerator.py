@@ -3,6 +3,7 @@ import datetime
 import json
 import httplib, urllib
 import basedevice
+import traceback
 
 class refrigeratorRequestHandler(BaseDeviceRequestHandler):
     def do_cmd_test(self):
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         self.state["tempwatcher"].stop()
     except Exception:                               #Something has gone wrong, break down the program
         outfile = open("crash_log_" + str(time.time), 'w')
-        outfile.write(traceback.print_ex)
+        outfile.write(traceback.print_ex())
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")  #cleanup the PID
         try:
