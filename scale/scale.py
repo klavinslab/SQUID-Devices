@@ -119,7 +119,7 @@ class Scale(BaseDevice):
     def __init__(self, handler):
         global state
         try:
-            BaseDevice.__init__(self,handler)
+            BaseDevice.__init__(self,handler,port=8001)
             state = self.state
         except Exception:                                   #gonna need a stack trace to figure out what went wrong
             traceback.print_exc()
