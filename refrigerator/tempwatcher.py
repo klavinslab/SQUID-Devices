@@ -58,7 +58,7 @@ class tempwatcher(threading.Thread):
         d = {"datum[uuid]": self.uuid,
              "datum[data]": data}
         post_data = urllib.urlencode(d)
-        headers = {"Content-type": "plain/text",
+        headers = {"Content-type": "application/x-www-form-urlencoded",
                    "Accept": "text/plain"}
         conn = httplib.HTTPConnection(self.SQUID_ID, \
                                       self.SQUID_PORT)

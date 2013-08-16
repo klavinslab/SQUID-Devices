@@ -88,7 +88,7 @@ class serialReader(Thread):
                     self.read()
                 else:
                     self.serial.open()
-            except Exception:                              #If this exception is raised then the device is probably off.
+            except SerialException:                              #If this exception is raised then the device is probably off.
                 self.serial.close()
                 if powered_on:
                     powered_on = False
@@ -98,12 +98,10 @@ class serialReader(Thread):
                                   "event-type": "powered-off"})
             
     def read(self):
-        try:
-            line = self.serial.readline()
-            if len(line) > 3:
-                parse_and_post_data(line)
-        except SerialException:
-            raise Exception
+        line = self.serial.readline()
+        if len(line) > 3:
+            parse_and_post_data(line)
+       
 
     
     
@@ -165,7 +163,6 @@ def parse_and_post_data(line):
                 post({"time"      :time.time(),
                       "event-type":"stable",
                       "mass"      : current_value})
-                pass
         
 """Posts data to SQUID"""
 def post(data):
@@ -177,7 +174,7 @@ def post(data):
     post_data = urllib.urlencode(d)
     print post_data
     
-    headers = {"content-type"   : "plain/text",
+    headers = {"content-type"   : "application/x-www-form-urlencoded",
                 "Accept"        : "text/plain"}
     conn = httplib.HTTPConnection(squid_ip, \
                                       squid_port)

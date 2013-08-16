@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+#	/etc/rc.d/init.d/refrigerator
+#
+# labprinter	This shell script starts the printer daemon
+#
+# Source function library
+. /lib/lsb/init-functions
+
+dir="/home/bioturk/SQUID-Devices/refrigerator"
+PIDFILE="/var/run/refrigerator.pid"
+
+ start() {
+	echo -n "Starting refrigerator: "
+	if [ -f $PIDFILE ]; then
+		PID = `cat $PIDFILE`
+		echo refrigerator is already running: $PID
+		exit 2;
+	else
+		cd $dir
+		python refrigerator.py
+		return $?
+	fi
+}
+
+ stop() {
+	echo -n "Shutting down refrigerator"
+	echo
+	rm /var/run/labprinter.pid
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	force-reload)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: {start|stop|restart}"
+		exit 1
+		;;
+esac
+exit $?
+
