@@ -6,7 +6,9 @@ import time
 import thread
 import os
 import traceback
-
+import barcode
+from barcode.writer import ImageWriter
+from subprocess import call
 """
 Programmer: Joseph Sullivan
 Research Assistant, ISTC PC
@@ -58,15 +60,18 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
                     self.send_response(200)
                     self.send_header("content-type", "text/plain")
                     self.end_headers()
-                
+            
+            if query.has_key('barcode'):
+                ean = barcode.get('ean13', query.get('barcode'),self.state['barcodewriter'])
+                ean.save('ean13')
+                return_code = call('lp /home/bioturk/SQUID-Devices/LabPrinter/ean13.png', shell = True)
+                print return_code
             else :
             #No text given, bad request.
                 self.send_response(400) #bad request
                 self.send_header("content-type", "text/plain")
                 self.end_headers()
-                self.wfile.write("Cannot print without text")
-                pass
-        pass
+                self.wfile.write("Cannot print without text or barcode")
     
     
     def do_cmd_info(self):
@@ -107,6 +112,9 @@ class labprinter(basedevice.BaseDevice):
             try:
                 self.state['cups'] = cups.Connection()
                 self.state['connection'] = 'connected'
+                self.state['barcodewriter'] = ImageWriter()
+                self.state['barcodewriter'].set_options({'module_width' : 45,
+                                                         'module_height': 25})
             except Exception:
                 print 'Initialization failed: unable to establish CUPS connection.'
                 print Exception.__doc__

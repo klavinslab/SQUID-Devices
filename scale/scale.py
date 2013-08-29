@@ -200,7 +200,7 @@ if __name__ == '__main__':
         serial.join()
         dev.stop()
     except Exception:                                       #Something went wrong, break down the program
-        outfile = open("/home/bioturk/SQUID-Devices/scale/crash_log_" + str(time.time), 'w')
+        outfile = open("/home/bioturk/SQUID-Devices/scale/crash_log_" + str(time.time()), 'w')
         outfile.write(traceback.print_exc())
         if os.path.exists("var/run/scale.pid"):
             os.remove("/var/run/scale.pid")          #cleanup the PID
