@@ -12,8 +12,7 @@ this data to the SQUID
 """
 class DoorWatcher(threading.Thread):
     
-    def __init__(self,in_pin):
-        self.in_pin = in_pin
+    def __init__(self):
         self.SQUID_IP
         self.SQUID_PORT
         self.running = False
@@ -21,14 +20,14 @@ class DoorWatcher(threading.Thread):
         threading.Thread.__init__(self)
 
         
-    def run(self, uuid, SQUID_IP, SQUID_PORT):
+    def run(self, in_pin, uuid, SQUID_IP, SQUID_PORT):
         self.running = True
         self.uuid = uuid
         self.SQUID_IP = SQUID_IP
         self.SQUID_PORT = SQUID_PORT
-        self.__watch__(self)
+        self.__watch__(self, in_pin)
     
-    def __watch__(self):
+    def __watch__(self, in_pin):
         #Initialize state of the door
         if GPIO.input(in_pin) == True:
             is_open = True

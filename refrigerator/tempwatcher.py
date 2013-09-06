@@ -4,6 +4,7 @@ import threading
 import time
 import datetime
 import math
+import spidev
 
 
 #This subprogram monitors the temperature every minute and then returns the
@@ -22,11 +23,13 @@ import math
 
 class tempwatcher(threading.Thread):
     
-    def run(self, uuid, SQUID_IP, SQUID_PORT):
+    def run(self, spi_channel, uuid, SQUID_IP, SQUID_PORT):
         self.is_running == True
         self.uuid = uuid
         self.SQUID_IP = SQUID_IP
         self.SQUID_PORT = SQUID_PORT
+        spi = SpiDev()
+        spi.open(0,0)
         while self.is_running == True:
             values = spi.xfer2([1,8<<4,0])
             value = ((values[1]&3) << 8) + values[2]
@@ -36,11 +39,12 @@ class tempwatcher(threading.Thread):
             self._post_squid_data({"temperature" : T,"time": datetime.time})
             sleep(10)
             
-    def __init__(self,spi_channel,uuid,SQUID_IP,SQUID_PORT):
+    def __init__(self):
         #Device information and SQUID address
         self.is_running = False
-        threading.Thread.__init__(self)
-        
+        self.SQUID_IP = ''
+        self.SQUID_PORT = ''
+        self.uuid = ''
         #Constants used to calculate temperature
         self.Rref = 10000
         self.R = 25500
