@@ -22,11 +22,11 @@ import math
 
 class tempwatcher(threading.Thread):
     
-    def post(self):
-        pass
-    
     def run(self):
         self.is_running == True
+        self.uuid = uuid
+        self.SQUID_IP = SQUID_IP
+        self.SQUID_PORT = SQUID_PORT
         while self.is_running == True:
             values = spi.xfer2([1,8<<4,0])
             value = ((values[1]&3) << 8) + values[2]
@@ -39,10 +39,6 @@ class tempwatcher(threading.Thread):
     def __init__(self,spi_channel,uuid,SQUID_IP,SQUID_PORT):
         #Device information and SQUID address
         self.is_running = False
-        self.SQUID_IP = SQUID_IP
-        self.SQUID_PORT = SQUID_PORT
-        self.spi_channel = channel
-        self.uuid = uuid
         threading.Thread.__init__(self)
         
         #Constants used to calculate temperature
@@ -53,6 +49,7 @@ class tempwatcher(threading.Thread):
         self.C1 = 2.620131e-6
         self.D1 = 6.383091e-8
         threading.Thread.__init__(self)
+    
     
     def _post_squid_data(self,data):
         d = {"datum[uuid]": self.uuid,

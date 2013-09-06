@@ -12,17 +12,20 @@ this data to the SQUID
 """
 class DoorWatcher(threading.Thread):
     
-    def __init__(self,in_pin,SQUID_IP,SQUID_PORT):
+    def __init__(self,in_pin):
         self.in_pin = in_pin
-        self.SQUID_IP = SQUID_IP
-        self.SQUID_PORT = SQUID_PORT
+        self.SQUID_IP
+        self.SQUID_PORT
         self.running = False
         GPIO.setup(in_pin,GPIO.IN)
         threading.Thread.__init__(self)
 
         
-    def run(self):
+    def run(self, uuid, SQUID_IP, SQUID_PORT):
         self.running = True
+        self.uuid = uuid
+        self.SQUID_IP = SQUID_IP
+        self.SQUID_PORT = SQUID_PORT
         self.__watch__(self)
     
     def __watch__(self):
@@ -45,7 +48,7 @@ class DoorWatcher(threading.Thread):
             time.sleep(1)
     
     def _post_squid_data(self,data):
-        d = {"datum[uuid]": self.state["uuid"],
+        d = {"datum[uuid]": self.uuid,
              "datum[data]": data}
         post_data = urllib.urlencode(d)
         headers = {"Content-type": "application/x-www-form-urlencoded",
@@ -53,8 +56,7 @@ class DoorWatcher(threading.Thread):
         conn = httplib.HTTPConnection(self.SQUID_ID, \
                                       self.SQUID_PORT)
         conn.request("POST",post_data,headers)
-    
-    
+      
     def stop(self):
         self.running = False 
     

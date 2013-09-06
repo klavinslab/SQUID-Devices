@@ -31,21 +31,25 @@ class refrigeratorRequestHandler(BaseDeviceRequestHandler):
         self.wfile.write(response)
         
     def do_cmd_acquire(self):
-        try:
-            self.state["tempwatcher"].run()
-            self.state["doorwatcher"].run()
-            self.send_response(200)
-            self.send_header("content-type", "text/plain")
-            self.end_headers()
-            self.wfile.write("OK")
-            self.state["SQUID-IP"] = self.client_address[0];
-            self.state["SQUID-PORT"] = self.query["port"]
-        except Exception:
-            #SOMETHING WENT WRONG! HO-LI-****
-            self.send_response(500)
-            self.send_header("content-type","text/plain")
-            self.end_headers()
-            self.wfile.write("Get Joey to fix it")
+        if self.state["acquire"]:
+            #do nothing
+            pass
+        else:
+            try:
+                self.state["tempwatcher"].run()
+                self.state["doorwatcher"].run()
+                self.send_response(200)
+                self.send_header("content-type", "text/plain")
+                self.end_headers()
+                self.wfile.write("OK")
+                self.state["SQUID-IP"] = self.client_address[0];
+                self.state["SQUID-PORT"] = self.query["port"]
+            except Exception:
+                #SOMETHING WENT WRONG! HO-LI-****
+                self.send_response(500)
+                self.send_header("content-type","text/plain")
+                self.end_headers()
+                self.wfile.write("Get Joey to fix it")
         
     
         
@@ -53,10 +57,9 @@ class refrigerator(BaseDevice):
     def __init__(self, handler, settings,door_input_pin):
         basedevice.BaseDevice.__init__(self, handler)
         self.settings = settings
-        self.state["doorwatcher"] = doorwatcher(24,
-                                    self.state["uuid"],self.state["SQUID-IP"], self.state["SQUID-PORT"])
-        self.state["tempwatcher"] = TemperatureWatcher(0,
-                                    self.state["uuid"],self.state["SQUID-IP"],self.state["SQUID-PORT"])
+        self.state["doorwatcher"] = doorwatcher(24)
+        self.state["tempwatcher"] = TemperatureWatcher(0)
+        self.state["acquire"] = False
             
     def update_time_forever(self):
         self.state["time"] = time.time()
