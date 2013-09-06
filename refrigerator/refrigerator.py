@@ -5,6 +5,7 @@ import httplib, urllib
 from basedevice import BaseDevice, BaseDeviceRequestHandler
 from tempwatcher import tempwatcher
 from doorwatcher import DoorWatcher
+import time
 import traceback
 
 class refrigeratorRequestHandler(BaseDeviceRequestHandler):
@@ -83,7 +84,7 @@ if __name__ == '__main__':
         self.state["doorwatcher"].stop()
         self.state["tempwatcher"].stop()
     except Exception:                               #Something has gone wrong, break down the program
-        outfile = open("/home/bioturk/SQUID-Devices/crash_log_" + str(time.time), 'w')
+        outfile = open("/home/bioturk/SQUID-Devices/crash_log_" + str(time.time()), 'w')
         outfile.write(traceback.print_exc())
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")  #cleanup the PID
