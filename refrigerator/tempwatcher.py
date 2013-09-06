@@ -22,7 +22,7 @@ import math
 
 class tempwatcher(threading.Thread):
     
-    def run(self):
+    def run(self, uuid, SQUID-IP, SQUID-PORT):
         self.is_running == True
         self.uuid = uuid
         self.SQUID_IP = SQUID_IP

@@ -2,7 +2,9 @@
 import datetime
 import json
 import httplib, urllib
-import basedevice
+from basedevice import BaseDevice, BaseDeviceRequestHandler
+from tempwatcher import tempwatcher
+from doorwatcher import DoorWatcher
 import traceback
 
 class refrigeratorRequestHandler(BaseDeviceRequestHandler):
@@ -36,8 +38,8 @@ class refrigeratorRequestHandler(BaseDeviceRequestHandler):
             pass
         else:
             try:
-                self.state["tempwatcher"].run()
-                self.state["doorwatcher"].run()
+                self.state["tempwatcher"].run(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+                self.state["doorwatcher"].run(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
                 self.send_response(200)
                 self.send_header("content-type", "text/plain")
                 self.end_headers()

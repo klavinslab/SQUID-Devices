@@ -34,7 +34,6 @@ class DoorWatcher(threading.Thread):
             is_open = True
         elif GPIO.input(in_pin) == False:
             is_open = False
-            
         #Every second check the state of the door, and if its state has changed post the event to SQUID        
         while running == True:
             if GPIO.input(in_pin) == True:
