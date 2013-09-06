@@ -60,7 +60,7 @@ class refrigerator(BaseDevice):
     def __init__(self, handler, settings,door_input_pin):
         BaseDevice.__init__(self, handler)
         self.settings = settings
-        self.state["doorwatcher"] = doorwatcher()
+        self.state["doorwatcher"] = DoorWatcher()
         self.state["tempwatcher"] = TemperatureWatcher()
         self.state["acquire"] = False
             
