@@ -7,6 +7,7 @@ from tempwatcher import tempwatcher
 from doorwatcher import DoorWatcher
 import time
 import traceback
+import os
 
 class refrigeratorRequestHandler(BaseDeviceRequestHandler):
     def do_cmd_test(self):
