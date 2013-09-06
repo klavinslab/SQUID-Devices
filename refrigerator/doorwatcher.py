@@ -13,8 +13,9 @@ this data to the SQUID
 class DoorWatcher(threading.Thread):
     
     def __init__(self):
-        self.SQUID_IP
-        self.SQUID_PORT
+        self.uuid = ''
+        self.SQUID_IP = ''
+        self.SQUID_PORT = ''
         self.running = False
         GPIO.setup(in_pin,GPIO.IN)
         threading.Thread.__init__(self)

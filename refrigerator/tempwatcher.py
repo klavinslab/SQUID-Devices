@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import wiringpi2 as wiringpi
 import threading
 import time
 import datetime
