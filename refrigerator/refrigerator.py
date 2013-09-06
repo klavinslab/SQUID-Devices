@@ -9,7 +9,7 @@ import time
 import traceback
 import os
 
-class refrigeratorRequestHandler(BaseDeviceRequestHandler):
+class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
     def do_cmd_test(self):
         self.send_response(200)
         self.send_header("content-type", "text/plain")
