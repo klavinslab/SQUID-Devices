@@ -3,7 +3,7 @@ import datetime
 import json
 import httplib, urllib
 from basedevice import BaseDevice, BaseDeviceRequestHandler
-from tempwatcher import tempwatcher
+from tempwatcher import TempWatcher
 from doorwatcher import DoorWatcher
 import time
 import traceback

@@ -20,7 +20,7 @@ import spidev
 #thermometer itself will post the data to the SQUID.
 
 
-class tempwatcher(threading.Thread):
+class TempWatcher(threading.Thread):
     
     def run(self):
         self.is_running == True
