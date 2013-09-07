@@ -12,37 +12,36 @@ this data to the SQUID
 """
 class DoorWatcher(threading.Thread):
     
-    def __init__(self):
+    def __init__(self, in_pin):
         self.uuid = ''
         self.SQUID_IP = ''
         self.SQUID_PORT = ''
         self.running = False
+        self.acquire = False
+        self.in_pin = in_pin
         GPIO.setup(in_pin,GPIO.IN)
         threading.Thread.__init__(self)
 
         
-    def run(self, in_pin, uuid, SQUID_IP, SQUID_PORT):
+    def run(self):
         self.running = True
-        self.uuid = uuid
-        self.SQUID_IP = SQUID_IP
-        self.SQUID_PORT = SQUID_PORT
-        self.__watch__(self, in_pin)
-    
-    def __watch__(self, in_pin):
+        self.__watch__(self, self.in_pin)
         #Initialize state of the door
-        if GPIO.input(in_pin) == True:
+        if GPIO.input(self.in_pin) == True:
             is_open = True
-        elif GPIO.input(in_pin) == False:
+        elif GPIO.input(self.in_pin) == False:
             is_open = False
         #Every second check the state of the door, and if its state has changed post the event to SQUID        
-        while running == True:
-            if GPIO.input(in_pin) == True:
+        while self.running == True:
+            if GPIO.input(self.in_pin) == True:
                 if not is_open == True:
-                    self._post_squid_data({"event-type" : "opened","time" : datetime.time})
+                    if self.acquire:
+                        self._post_squid_data({"event-type" : "opened","time" : datetime.time})
                     is_open = True
-            elif GPIO.input(in_pin) == False:
+            elif GPIO.input(self.in_pin) == False:
                 if not is_open == False:
-                    self._post_squid_data({"event-type" : "closed","time" : datetime.time})
+                    if self.acquire:
+                        self._post_squid_data({"event-type" : "closed","time" : datetime.time})
                     is_open == False
             time.sleep(1)
     
@@ -57,7 +56,13 @@ class DoorWatcher(threading.Thread):
         conn.request("POST",post_data,headers)
       
     def stop(self):
-        self.running = False 
+        self.running = False
+    
+    def acquire(self, uuid, ip, port):
+        self.uuid = uuid
+        self.SQUID_IP = ip
+        self.SQUID_PORT = port
+        self.acquire = True
     
     
 

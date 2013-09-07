@@ -22,28 +22,30 @@ import spidev
 
 class tempwatcher(threading.Thread):
     
-    def run(self, spi_channel, uuid, SQUID_IP, SQUID_PORT):
+    def run(self):
         self.is_running == True
         self.uuid = uuid
         self.SQUID_IP = SQUID_IP
         self.SQUID_PORT = SQUID_PORT
         spi = SpiDev()
-        spi.open(0,0)
+        spi.open(self.spi_port,0)
         while self.is_running == True:
             values = spi.xfer2([1,8<<4,0])
             value = ((values[1]&3) << 8) + values[2]
             v = 3.31*value/1024
             x = ((self.R * v)/(3.31 - v))/self.R
             T = 1/(self.A1 + self.B1*math.log(x) + self.C1*math.pow(math.log(x),2) + self.D1*math.pow(math.log(x),3))
-            self._post_squid_data({"temperature" : T,"time": datetime.time})
+            if self.acquire:
+                self._post_squid_data({"temperature" : T,"time": datetime.time})
             sleep(10)
             
-    def __init__(self):
+    def __init__(self, spi_port):
         #Device information and SQUID address
         self.is_running = False
         self.SQUID_IP = ''
         self.SQUID_PORT = ''
         self.uuid = ''
+        self.spi_port = spi_port
         #Constants used to calculate temperature
         self.Rref = 10000
         self.R = 25500
@@ -62,4 +64,10 @@ class tempwatcher(threading.Thread):
                    "Accept": "text/plain"}
         conn = httplib.HTTPConnection(self.SQUID_ID, \
                                       self.SQUID_PORT)
-        conn.request("POST",post_data,headers)   
+        conn.request("POST",post_data,headers)
+
+    def acquire(self, uuid, ip, port):
+        self.uuid = uuid
+        self.SQUID_IP = ip
+        self.SQUID_PORT = port
+        self.acquire = True

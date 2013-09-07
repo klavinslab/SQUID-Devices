@@ -39,8 +39,8 @@ class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
             pass
         else:
             try:
-                self.state["tempwatcher"].run(0, self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
-                self.state["doorwatcher"].run(24, self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+                self.state["tempwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+                self.state["doorwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
                 self.send_response(200)
                 self.send_header("content-type", "text/plain")
                 self.end_headers()
@@ -60,9 +60,9 @@ class refrigerator(BaseDevice):
     def __init__(self, handler, settings,door_input_pin):
         BaseDevice.__init__(self, handler)
         self.settings = settings
-        self.state["doorwatcher"] = DoorWatcher()
-        self.state["tempwatcher"] = TemperatureWatcher()
         self.state["acquire"] = False
+        self.state['doorwatcher'] = DoorWatcher(door_input_pin)
+        self.state['tempwatcher'] = TempWatcher(0)
             
     def update_time_forever(self):
         self.state["time"] = time.time()
@@ -79,10 +79,10 @@ if __name__ == '__main__':
     try:
         make_pid()
         dev = refrigerator(RefrigeratorRequestHandler,None,25)
+        dev.state['doorwatcher'].start()
+        dev.state['tempwatcher'].start()
         while os.path.exists("/var/run/refrigerator.pid"):
             time.sleep(10)                          #Keep executing, check again in 10 seconds
-        self.state["doorwatcher"].stop()
-        self.state["tempwatcher"].stop()
     except Exception:                               #Something has gone wrong, break down the program
         outfile = open("/home/bioturk/SQUID-Devices/crash_log_" + str(time.time()), 'w')
         outfile.write(traceback.print_exc())
