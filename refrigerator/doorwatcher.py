@@ -19,13 +19,15 @@ class DoorWatcher(threading.Thread):
         self.running = False
         self.acquire = False
         self.in_pin = in_pin
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(in_pin,GPIO.IN)
         threading.Thread.__init__(self)
+        print 'doorwatcher has been constructed'
 
         
     def run(self):
+        print 'doorwatcher is running'
         self.running = True
-        self.__watch__(self, self.in_pin)
         #Initialize state of the door
         if GPIO.input(self.in_pin) == True:
             is_open = True
@@ -46,8 +48,10 @@ class DoorWatcher(threading.Thread):
             time.sleep(1)
     
     def _post_squid_data(self,data):
+        print 'posting squid data'
         d = {"datum[uuid]": self.uuid,
              "datum[data]": data}
+        print d
         post_data = urllib.urlencode(d)
         headers = {"Content-type": "application/x-www-form-urlencoded",
                    "Accept": "text/plain"}
@@ -59,6 +63,7 @@ class DoorWatcher(threading.Thread):
         self.running = False
     
     def acquire(self, uuid, ip, port):
+        print 'doorwatcher is acquiring'
         self.uuid = uuid
         self.SQUID_IP = ip
         self.SQUID_PORT = port

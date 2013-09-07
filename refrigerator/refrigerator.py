@@ -39,20 +39,23 @@ class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
             pass
         else:
             try:
-                self.state["tempwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
-                self.state["doorwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+
                 self.send_response(200)
                 self.send_header("content-type", "text/plain")
                 self.end_headers()
                 self.wfile.write("OK")
                 self.state["SQUID-IP"] = self.client_address[0];
-                self.state["SQUID-PORT"] = self.query["port"]
+                self.state["SQUID-PORT"] = self.query["port"]                
+                self.state["tempwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+                self.state["doorwatcher"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
             except Exception:
                 #SOMETHING WENT WRONG! HO-LI-****
+                print 'exception caught in do_cmd_acquire'
                 self.send_response(500)
                 self.send_header("content-type","text/plain")
                 self.end_headers()
                 self.wfile.write("Get Joey to fix it")
+                traceback.print_exc()
         
     
         
@@ -63,6 +66,7 @@ class refrigerator(BaseDevice):
         self.state["acquire"] = False
         self.state['doorwatcher'] = DoorWatcher(door_input_pin)
         self.state['tempwatcher'] = TempWatcher(0)
+        print 'refrigerator device constructed'
             
     def update_time_forever(self):
         self.state["time"] = time.time()
@@ -81,6 +85,7 @@ if __name__ == '__main__':
         dev = refrigerator(RefrigeratorRequestHandler,None,25)
         dev.state['doorwatcher'].start()
         dev.state['tempwatcher'].start()
+        print 'threads have been started'
         while os.path.exists("/var/run/refrigerator.pid"):
             time.sleep(10)                          #Keep executing, check again in 10 seconds
     except Exception:                               #Something has gone wrong, break down the program

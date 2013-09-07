@@ -29,6 +29,7 @@ class tempwatcher(threading.Thread):
         self.SQUID_PORT = SQUID_PORT
         spi = SpiDev()
         spi.open(self.spi_port,0)
+        print 'spi interface built, tempwatcher is running'
         while self.is_running == True:
             values = spi.xfer2([1,8<<4,0])
             value = ((values[1]&3) << 8) + values[2]
@@ -54,11 +55,14 @@ class tempwatcher(threading.Thread):
         self.C1 = 2.620131e-6
         self.D1 = 6.383091e-8
         threading.Thread.__init__(self)
+        print 'tempwatcher has been constructed'
     
     
     def _post_squid_data(self,data):
+        print 'tempwatcher is posting data to squid'
         d = {"datum[uuid]": self.uuid,
              "datum[data]": data}
+        print d
         post_data = urllib.urlencode(d)
         headers = {"Content-type": "application/x-www-form-urlencoded",
                    "Accept": "text/plain"}
@@ -71,3 +75,4 @@ class tempwatcher(threading.Thread):
         self.SQUID_IP = ip
         self.SQUID_PORT = port
         self.acquire = True
+        print 'tempwatcher is acquiring data'
