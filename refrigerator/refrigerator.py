@@ -56,6 +56,7 @@ class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
                 self.end_headers()
                 self.wfile.write("Get Joey to fix it")
                 traceback.print_exc()
+                raise Exception
         
     
         
