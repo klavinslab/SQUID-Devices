@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import time, traceback, os, sys, spidev, math, json, httplib, urllib
-import RPI.GPIO as GPIO
+import time, traceback, os, sys, spidev, math, json, httplib, urllib, threading
+import RPi.GPIO as GPIO
 from basedevice import BaseDevice, BaseDeviceRequestHandler
-from threading import Thread
+
 
 acquire = False
 
@@ -75,7 +75,7 @@ class Refrigerator(BaseDevice):
         self.state["time"] = time.time()
         time.sleep(1)
 
-class refrigerator_monitor(Thread):
+class refrigerator_monitor(threading.Thread):
     """
     Monitor:
     Does all of the data collection and if the SQUID is acquiring data from the device
@@ -86,10 +86,11 @@ class refrigerator_monitor(Thread):
         #Device information and SQUID address
         self.is_running = False
         self.is_open = False
+	self.in_pin = in_pin
         self.SQUID_IP = ''
         self.SQUID_PORT = ''
         self.uuid = ''
-        self.spi = spi.SpiDev(spi_port,0)
+        self.spi = spidev.SpiDev(spi_port,0)
         #Constants used to calculate temperature
         self.Rref = 10000
         self.R = 25500
@@ -119,24 +120,25 @@ class refrigerator_monitor(Thread):
                 count = 0
             time.sleep(1)    
           
-    def  check_door(self):
+    def check_door(self):
         global acquire
         if GPIO.input(self.in_pin) == True:
-            if not is_open == True:
+            if not self.is_open == True:
                 if acquire:
                     self._post_squid_data({"event-type" : "opened","time" : datetime.time})
-                is_open = True
+                self.is_open = True
         elif GPIO.input(self.in_pin) == False:
-            if not is_open == False:
+            if not self.is_open == False:
                 if acquire:
                     self._post_squid_data({"event-type" : "closed","time" : datetime.time})
-                is_open == False
+                self.is_open == False
     
     def read_temperature(self):
         global acquire
         values = self.spi.xfer2([1,8<<4,0])
         value = ((values[1]&3) << 8) + values[2]
         v = 3.31*value/1024
+	print v
         x = ((self.R * v)/(3.31 - v))/self.R
         T = 1/(self.A1 + self.B1*math.log(x) + self.C1*math.pow(math.log(x),2) + self.D1*math.pow(math.log(x),3))
         if acquire:
@@ -178,15 +180,14 @@ if __name__ == '__main__':
         while os.path.exists("/var/run/refrigerator.pid"):
             time.sleep(10)                          #Keep executing, check again in 10 seconds
     except Exception:                               #Something has gone wrong, break down the program
-        crashlog = '/home/bioturk/SQUID-Devices/crashlog_' + str(time.time(),'w')
-        outfile = open(crashlog)
+        crashlog = '/home/bioturk/SQUID-Devices/crashlog_' + str(time.time())
+        outfile = open(crashlog, 'w')
         outfile.write(traceback.print_exc())
         print 'Crashlog \t' + crashlog
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")  #cleanup the PID
         try:
-            self.state["doorwatcher"].stop()        #Stop running threads
-            self.state["doorwatcher"].stop()
+            self.state["monitor"].stop()        #Stop running threads
         except Exception:
             print traceback.print_exc()
         sys.exit()
