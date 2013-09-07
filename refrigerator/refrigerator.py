@@ -8,6 +8,7 @@ from doorwatcher import DoorWatcher
 import time
 import traceback
 import os
+import sys
 
 class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
     def do_cmd_test(self):
@@ -90,8 +91,10 @@ if __name__ == '__main__':
         while os.path.exists("/var/run/refrigerator.pid"):
             time.sleep(10)                          #Keep executing, check again in 10 seconds
     except Exception:                               #Something has gone wrong, break down the program
-        outfile = open("/home/bioturk/SQUID-Devices/crash_log_" + str(time.time()), 'w')
+        crashlog = '/home/bioturk/SQUID-Devices/crashlog_' + str(time.time(),'w')
+        outfile = open(crashlog)
         outfile.write(traceback.print_exc())
+        print 'Crashlog \t' + crashlog
         if os.path.exists("var/run/refrigerator.pid"):
             os.remove("/var/run/refrigerator.pid")  #cleanup the PID
         try:
@@ -99,5 +102,6 @@ if __name__ == '__main__':
             self.state["doorwatcher"].stop()
         except Exception:
             print traceback.print_exc()
+        sys.exit()
             
     

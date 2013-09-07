@@ -24,8 +24,6 @@ class TempWatcher(threading.Thread):
     
     def run(self):
         self.is_running == True
-        self.SQUID_IP = SQUID_IP
-        self.SQUID_PORT = SQUID_PORT
         spi = spidev.SpiDev()
         spi.open(self.spi_port,0)
         print 'spi interface built, tempwatcher is running'
