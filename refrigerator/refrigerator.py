@@ -98,6 +98,6 @@ if __name__ == '__main__':
             self.state["doorwatcher"].stop()        #Stop running threads
             self.state["doorwatcher"].stop()
         except Exception:
-            pass
+            print traceback.print_exc()
             
     
