@@ -7,9 +7,37 @@ from CustomWriter import CustomWriter
 
 class Label():
     
-    def __init__(self, (width, height), text = None, barcode = None, qrcode = None):
+    def __init__(self, (width, height), data):
+        """ Constructs a Label image using PIL
+        Inputs
+            (width,height)      tuple of dimensions of the label in pixels
+            data                dictionary of data used to create the label
+            
+            {'barcode' = 12 digit integer string,
+             'qrcode'  = string,
+             'text'    = string}"""
+             
         self.images = {}
         print (width, height)
+        if data.has_key('text') & data.has_key('barcode') & data.has_key('qrcode'):
+            """make a label with all three attributes"""
+            text_image = make_text(data['text'],width,height)
+            bar_size = (int(15*width/24), int(width//3))
+            bar_image = make_bar_image(data['barcode'])
+            bar_image = bar_image.resize(bar_size)
+            qr_image = make_qr_image(data['qrcode'])
+            qr_size = (int(width//4), int(width//4))
+            qr_image = qr_image.resize(qr_size, Image.NEAREST)
+            image = text_image
+            qr_pos = (int(width//24), int(width//24))
+            image.paste(qr_image,qr_pos)
+            bar_pos = (int(9*width//24), int(width//24))
+            image.paste(bar_image,bar_pos)
+            image.save('composite.png', 'PNG')
+            
+        if data.has_key('text') & data.has_key('qrcode') & (not data.has_key('barcode')):
+            pass
+        """
         if text != None:
             text_image = make_text(text, width, height)
             text_image.save("text_image", "PNG")
@@ -34,7 +62,7 @@ class Label():
         bar_pos = (int(9*width//24), int(width//24))
         image.paste(bar_image, bar_pos)
         image.save('composite', 'PNG')
-        
+        """
         
     
         
@@ -53,7 +81,7 @@ def make_text(text, width, height):
     del textbox
     return image
     
-def make_bar_image(code, width, height):
+def make_bar_image(code):
     #writer = CustomWriter(width, height)
     ean = barcode.get('ean13', code, ImageWriter())
     return ean.render()

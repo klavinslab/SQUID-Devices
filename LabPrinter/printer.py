@@ -9,6 +9,7 @@ import traceback
 import barcode
 from barcode.writer import ImageWriter
 from subprocess import call
+from Label import Label
 """
 Programmer: Joseph Sullivan
 Research Assistant, ISTC PC
@@ -28,6 +29,14 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
         cups = self.state['cups']
         query = self.query
         
+        for key, value in query:
+            if key != 'text' & 'barcode' & 'qrcode':
+                query.pop(key)
+            else:
+                data.update({key, value})
+        
+        
+        
         #This logic block is included for barcode implementation in the future, if barcodes are desired.
         if query.has_key('text') & query.has_key('barcode'):
             self.makeFile(query.get('text'),query.get('barcode'))
@@ -39,39 +48,7 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
                 self.send_header("content-type", "text/plain")
                 self.end_headers() 
                     
-            else:
-                cups.printFile(cups.getDefault(),'temp_print_file','job',{})
-          
-        #Primary code block that prints a text file        
-        else:
-            if query.has_key('text'):
-                self.makeFile(query.get('text'),'null')
-                if query.has_key('copies'):
-                    for i in range(0,int(query.get('copies'))):
-                        cups.printFile(cups.getDefault(),'temp_print_file', str(i),{})
-                        
-                    self.send_response(200)
-                    self.send_header("content-type", "text/plain")
-                    self.end_headers()
-                        
-                else:
-                    cups.printFile(cups.getDefault(),'temp_print_file','job',{})
-                    
-                    self.send_response(200)
-                    self.send_header("content-type", "text/plain")
-                    self.end_headers()
-            
-            if query.has_key('barcode'):
-                ean = barcode.get('ean13', query.get('barcode'),self.state['barcodewriter'])
-                ean.save('ean13')
-                return_code = call('lp /home/bioturk/SQUID-Devices/LabPrinter/ean13.png', shell = True)
-                print return_code
-            else :
-            #No text given, bad request.
-                self.send_response(400) #bad request
-                self.send_header("content-type", "text/plain")
-                self.end_headers()
-                self.wfile.write("Cannot print without text or barcode")
+         
     
     
     def do_cmd_info(self):
@@ -112,9 +89,6 @@ class labprinter(basedevice.BaseDevice):
             try:
                 self.state['cups'] = cups.Connection()
                 self.state['connection'] = 'connected'
-                self.state['barcodewriter'] = ImageWriter()
-                self.state['barcodewriter'].set_options({'module_width' : 45,
-                                                         'module_height': 25})
             except Exception:
                 print 'Initialization failed: unable to establish CUPS connection.'
                 print Exception.__doc__
