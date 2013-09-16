@@ -23,8 +23,7 @@ TODO: in next version create methods that format the document which will be prin
 class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
     #code
     
-    def do_cmd_print(self):
-        
+    def do_cmd_print(self):      
         query = self.query
         label = Label(query)
         del label
@@ -33,16 +32,6 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
                 os.system('lp -o fit-to-page label.png')
         else:
             os.system('lp -o fit-to-page label.png')
-        #This logic block is included for barcode implementation in the future, if barcodes are desired.
-        if query.has_key('text') & query.has_key('barcode'):
-            self.makeFile(query.get('text'),query.get('barcode'))
-            if query.has_key('copies'):
-                for i in range(0,int(query.get('copies'))):
-                    cups.printFile(cups.getDefault(),'temp_print_file', str(i),{})
-                    
-                self.send_response(200)
-                self.send_header("content-type", "text/plain")
-                self.end_headers() 
                     
          
     
@@ -52,43 +41,18 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
         self.send_header("content-type", "text/plain")
         self.end_headers()
         info = {"uuid" : self.state["uuid"],
-          "status" : self.state["connection"],
           "state" : "",
           "name" : "Zebra GK420t printer"}
         if self.state['connection'] == 'not_connected':
             info.update({"status":"not ready - no CUPS connection"})
         response = json.dumps(info)
         self.wfile.write(response)
-        pass
-    
-    #This makes the file that is sent to the CUPS server
-    def makeFile(self, text, barcode):
-        if barcode == 'null':
-            outfile = open('temp_print_file', 'w')
-            outfile.write('\n' + text + '\n')
-            
-        else:
-            #outfile = open('/temp/temp_print_file','w')
-            #NEED TO FIGURE OUT HOW TO PRINT BYTES IN PYTHON,
-            #CAN GET BYTES FROM BARCODE LIBRARY
-            outfile = open('temp_print_file', 'w')
-            outfile.write('\n')
-            outfile.write(text + '\n')
-        pass    
+        pass  
     
 class labprinter(basedevice.BaseDevice):
     
     def __init__(self, handler):
         basedevice.BaseDevice.__init__(self, handler)
-        self.state['connection'] = 'not_connected'
-        while self.state['connection'] != 'connected':
-            try:
-                self.state['cups'] = cups.Connection()
-                self.state['connection'] = 'connected'
-            except Exception:
-                print 'Initialization failed: unable to establish CUPS connection.'
-                print Exception.__doc__
-                time.sleep(5)
             
     def work(self):
         while 1:
