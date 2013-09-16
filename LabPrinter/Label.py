@@ -3,7 +3,6 @@ from PIL import Image, ImageFont, ImageDraw
 import qrcode
 import barcode
 from barcode.writer import ImageWriter
-from CustomWriter import CustomWriter
 
 """
 Joseph Sullivan
