@@ -136,6 +136,8 @@ def make_text(text, width, height, font_size):
     return image
         
 def breakup_lines(text, width, fontwidthpx):
+    if fontwidthpx*len(text) < int(11*width//12):
+        return text
     for i in range(len(text)):
         if text[-i] == ' ':
             if ( fontwidthpx*len(text[0:-(i+1)]) ) < int(11*width//12):
