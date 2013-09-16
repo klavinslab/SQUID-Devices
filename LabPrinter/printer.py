@@ -1,5 +1,4 @@
 #!/usr/bin/env python\
-import cups
 import json
 import basedevice
 import time
@@ -26,17 +25,14 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
     
     def do_cmd_print(self):
         
-        cups = self.state['cups']
         query = self.query
-        
-        for key, value in query:
-            if key != 'text' & 'barcode' & 'qrcode':
-                query.pop(key)
-            else:
-                data.update({key, value})
-        
-        
-        
+        label = Label(query)
+        del label
+        if query.has_key('copies'):
+            for i in range(0, int(query.get('copies'))):
+                os.system('lp -o fit-to-page label.png')
+        else:
+            os.system('lp -o fit-to-page label.png')
         #This logic block is included for barcode implementation in the future, if barcodes are desired.
         if query.has_key('text') & query.has_key('barcode'):
             self.makeFile(query.get('text'),query.get('barcode'))
