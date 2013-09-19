@@ -32,10 +32,23 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
                 os.system('lp -o fit-to-page label.png')
         else:
             os.system('lp -o fit-to-page label.png')
-                    
+            self.send_response( 200 )
+        self.send_header("content-type", "text/plain")
+        self.end_headers()        
+        self.wfile.write("OK")
+        
+    def do_cmd_test(self):
+        self.send_response( 200 )
+        self.send_header("content-type", "text/plain")
+        self.end_headers()
+        response = "path: " + self.path + "\n"
+        response += "qs: " + str(self.query) +"\n"
+        response += "post data: " + str(self.postdata) + "\n"
+        response += "server data: " + str(self.server.server_address) + "\n"
+        response += "server_obj data: " + str(self.state) + "\n"
+        response += "clined address: " +str(self.client_address) + "\n"
+        self.wfile.write(response)
          
-    
-    
     def do_cmd_info(self):
         self.send_response( 200 )
         self.send_header("content-type", "text/plain")
@@ -46,8 +59,7 @@ class PrinterRequestHandler(basedevice.BaseDeviceRequestHandler):
         if self.state['connection'] == 'not_connected':
             info.update({"status":"not ready - no CUPS connection"})
         response = json.dumps(info)
-        self.wfile.write(response)
-        pass  
+        self.wfile.write(response)  
     
 class labprinter(basedevice.BaseDevice):
     
