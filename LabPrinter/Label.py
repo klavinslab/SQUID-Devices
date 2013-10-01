@@ -69,7 +69,7 @@ class Label():
             image.save('label.png', 'PNG')
             
         if data.has_key('text') & data.has_key('qrcode') & (not data.has_key('barcode')):
-            text_image = make_text(data['text'],width,height)
+            text_image = make_text(data['text'], width, height, font_size)
             qr_image = make_qr_image(data['qrcode'])
             qr_size = (int(width//4), int(width//4))
             qr_image = qr_image.resize(qr_size, Image.NEAREST)
@@ -79,7 +79,7 @@ class Label():
             image.save('label.png', 'PNG')
         
         if data.has_key('text') & data.has_key('barcode') & (not data.has_key('qrcode')):
-            text_image = make_text(data['text'],width,height)
+            text_image = make_text(data['text'], width, height, font_size)
             bar_size = (int(11*width/12), int(width//3))
             bar_image = make_bar_image(data['barcode'])
             bar_image = bar_image.resize(bar_size)
@@ -122,7 +122,6 @@ def make_text(text, width, height, font_size):
         size : tuple of pixel dimensions (width, height) for the box
     """
     print 'in make_text'
-    print text
     image = Image.new("RGB", (width, height), "white")
     usr_font = ImageFont.truetype("/home/bioturk/SQUID-Devices/LabPrinter/DejaVuSansMono.ttf", font_size)
     textbox = ImageDraw.Draw(image)
@@ -136,8 +135,11 @@ def make_text(text, width, height, font_size):
     return image
         
 def breakup_lines(text, width, fontwidthpx):
+    print 'IN BREAKUP_LINES'
     if fontwidthpx*len(text) < int(11*width//12):
-        return text
+        lines = []
+        lines.append(text)
+        return lines
     for i in range(len(text)):
         if text[-i] == ' ':
             if ( fontwidthpx*len(text[0:-(i+1)]) ) < int(11*width//12):
