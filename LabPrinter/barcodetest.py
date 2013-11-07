@@ -20,9 +20,9 @@ writer2 = LabelWriter(55, 30, "testing123testing")
 ean132 = barcode.get('ean13', '123456789101', writer2)
 filename = ean132.save('ean123')
 """
-def mm2px(mm, dpi=410):
+def mm2px(mm, dpi=203):
     return (mm * dpi) / 25.4
 
-width = int(mm2px(55))
-height = int(mm2px(30))
-mylabel = Label((width,height), 'ALL YOUR LABELS SHALL BE ASSIMILATED', '123456789101', '101987654321')
+width = int(mm2px(100))
+height = int(mm2px(50))
+mylabel = Label((width,height),{'text' : 'ALL YOUR LABELS SHALL BE ASSIMILATED','barcode' : '123456789101','qrcode' : '101987654321'})
