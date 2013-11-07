@@ -1,9 +1,21 @@
+"""
+Joseph Sullivan
+ISTC-PC
+Smart Wet lab
+
+--Refrigerator device script--
+SQUID compliant basedevice which monitors the temperature and door state of refrigerators/freezers.
+The Refrigerator class contains a seperate monitor for each refrigerator monitored by the device.
+The number of regrigerators is specified in the construction of the device. Currently 2 is supported, but
+this number can be expanded easily"""
+
 #!/usr/bin/env python
 import time, traceback, os, sys, spidev, math, json, httplib, urllib, threading
 import RPi.GPIO as GPIO
 from basedevice import BaseDevice, BaseDeviceRequestHandler
 
-
+#acquire is a global variable, when acquire is set to true
+#the 
 acquire = False
 
 class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
@@ -32,7 +44,8 @@ class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
         self.wfile.write(response)
         
     def do_cmd_acquire(self):
-        if self.state["acquire"]:
+	global acquire
+        if acquire:
             pass
         else:
             try:
@@ -44,8 +57,8 @@ class RefrigeratorRequestHandler(BaseDeviceRequestHandler):
                 self.state["SQUID-IP"] = self.client_address[0];
                 self.state["SQUID-PORT"] = self.query["port"]                
                 self.state["monitor"].acquire(self.state['uuid'], self.state['SQUID-IP'], self.state['SQUID-PORT'])
+		acquire = True
             except Exception:
-                #SOMETHING WENT WRONG! HO-LI-****
                 print 'exception caught in do_cmd_acquire'
                 self.send_response(500)
                 self.send_header("content-type","text/plain")
@@ -75,14 +88,22 @@ class Refrigerator(BaseDevice):
         self.state["time"] = time.time()
         time.sleep(1)
 
+    def stop(self):
+	self.state["monitor"].stop()
+	self.state["monitor"].spi.close() 
+	BaseDevice.stop(self)
+
+
+
 class refrigerator_monitor(threading.Thread):
-    """
-    Monitor:
-    Does all of the data collection and if the SQUID is acquiring data from the device
-    then this class will POST data to the squid as it becomes available.
-    """
+    
+   # Monitor:
+   # Does all of the data collection and if the SQUID is acquiring data from the device
+   # then this class will POST data to the squid as it becomes available.
+    
     
     def __init__(self, spi_port, in_pin):
+	threading.Thread.__init__(self)
         #Device information and SQUID address
         self.is_running = False
         self.is_open = False
@@ -91,105 +112,131 @@ class refrigerator_monitor(threading.Thread):
         self.SQUID_PORT = ''
         self.uuid = ''
         self.spi = spidev.SpiDev(spi_port,0)
+	#self.spi.cshigh = True	
         #Constants used to calculate temperature
         self.Rref = 10000
-        self.R = 25500
+        self.R = 26560
         self.A1 = 3.354016e-3
         self.B1 = 2.569850e-4
         self.C1 = 2.620131e-6
         self.D1 = 6.383091e-8
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(in_pin,GPIO.IN)
-        threading.Thread.__init__(self)
+	self.running = True
     
     def run(self):
-        self.running = True
         count = 0
-        #Set state of the door
+        
         if GPIO.input(self.in_pin) == True:
             is_open = True
         elif GPIO.input(self.in_pin) == False:
             is_open = False
-        #running loop
+        
         while self.running:
-            print "running loop"
             self.check_door()
             count += 1
             if count == 10:
                 self.read_temperature()
                 count = 0
             time.sleep(1)    
-          
+         
     def check_door(self):
+	#When the door is open, the input pin is logic high
+	#hence an open door is high true
         global acquire
-        if GPIO.input(self.in_pin) == True:
+	door_state = GPIO.input(self.in_pin)
+
+        if door_state == True:
             if not self.is_open == True:
                 if acquire:
-                    self._post_squid_data({"event-type" : "opened","time" : datetime.time})
+                    self._post_squid_data({"event-type" : "opened","time" : time.time()})
                 self.is_open = True
-        elif GPIO.input(self.in_pin) == False:
+
+        elif door_state == False:
             if not self.is_open == False:
                 if acquire:
-                    self._post_squid_data({"event-type" : "closed","time" : datetime.time})
-                self.is_open == False
-    
+                    self._post_squid_data({"event-type" : "closed","time" : time.time()})
+                self.is_open = False
+ 
     def read_temperature(self):
         global acquire
+
         values = self.spi.xfer2([1,8<<4,0])
         value = ((values[1]&3) << 8) + values[2]
+
         v = 3.31*value/1024
-	print v
-        x = ((self.R * v)/(3.31 - v))/self.R
+        x = ((self.R * v)/(3.31 - v))//self.Rref
         T = 1/(self.A1 + self.B1*math.log(x) + self.C1*math.pow(math.log(x),2) + self.D1*math.pow(math.log(x),3))
+	
         if acquire:
-            self._post_squid_data({"temperature" : T,"time": datetime.time})
+            self._post_squid_data({"temperature" : T,"time": time.time()})
             
     def acquire(self, uuid, ip, port):
-        global acquire
         self.uuid = uuid
         self.SQUID_IP = ip
         self.SQUID_PORT = port
-        acquire = True
-    
         
     def _post_squid_data(self,data):
         print 'posting data to squid'
+
         d = {"datum[uuid]": self.uuid,
              "datum[data]": data}
         print d
+
         post_data = urllib.urlencode(d)
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-                   "Accept": "text/plain"}
-        conn = httplib.HTTPConnection(self.SQUID_ID, \
+
+       # headers = {"Content-type": "application/x-www-form-urlencoded",
+       #            "Accept": "text/plain"}
+
+        conn = httplib.HTTPConnection(self.SQUID_IP, \
                                       self.SQUID_PORT)
-        conn.request("POST",post_data,headers)
+       # conn.request("POST",post_data,headers)
+	conn.request("POST", '/data', post_data)
+
+    def stop(self):
+	self.running = False
+
         
 def make_pid():
     pid = os.getpid()
     if os.path.exists("/var/run/scale.pid"):        #This process is already running on the machine. Stop execution
         raise Exception
-    outfile = open("/var/run/refrigerator.pid" , 'w')
+    outfile = open("/var/run/refrigerator.pid" , 'w') #Build the PID file that identifies this process
     outfile.write(str(pid) + '\n')        
+
+
+
         
 if __name__ == '__main__':
+    if os.path.exists("/var/run/refrigerator.pid"):
+	print "Process is already running."
+	sys.exit()
+
     try:
         make_pid()
         dev = Refrigerator(RefrigeratorRequestHandler,None,0,25)
+        dev.start()
         dev.state['monitor'].start()
-        print 'threads have been started'
+
         while os.path.exists("/var/run/refrigerator.pid"):
-            time.sleep(10)                          #Keep executing, check again in 10 seconds
-    except Exception:                               #Something has gone wrong, break down the program
-        crashlog = '/home/bioturk/SQUID-Devices/crashlog_' + str(time.time())
-        outfile = open(crashlog, 'w')
-        outfile.write(traceback.print_exc())
-        print 'Crashlog \t' + crashlog
-        if os.path.exists("var/run/refrigerator.pid"):
-            os.remove("/var/run/refrigerator.pid")  #cleanup the PID
-        try:
-            self.state["monitor"].stop()        #Stop running threads
-        except Exception:
-            print traceback.print_exc()
-        sys.exit()
-            
+	    try:
+                if not dev.state['monitor'].isAlive():
+                    break
+                time.sleep(10)                          #Keep executing, check again in 10 seconds
+	    except KeyboardInterrupt:
+	        raise Exception       
+
+        if os.path.exists("/var/run/refrigerator.pid"):
+            os.remove("/var/run/refrigerator.pid")	#cleanup the PID
     
+        dev.stop()
+	GPIO.cleanup()
+
+    except Exception:        				
+	                                               #Something has gone wrong, break down the program
+        print "BREAKING DOWN PROGRAM"
+	dev.stop()
+        GPIO.cleanup()
+	if os.path.exists("/var/run/refrigerator.pid"):
+		os.remove("/var/run/refrigerator.pid")
+   
