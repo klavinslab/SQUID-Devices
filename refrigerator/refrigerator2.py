@@ -233,10 +233,12 @@ if __name__ == '__main__':
 	GPIO.cleanup()
 
     except Exception:        				
-	                                               #Something has gone wrong, break down the program
+		                                               #Something has gone wrong, break down the program
         print "BREAKING DOWN PROGRAM"
+	traceback.print_exc()
 	dev.stop()
         GPIO.cleanup()
 	if os.path.exists("/var/run/refrigerator.pid"):
 		os.remove("/var/run/refrigerator.pid")
    
+
